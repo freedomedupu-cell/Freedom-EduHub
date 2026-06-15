@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Freedom EduHub</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',sans-serif;background:#f0f7fc;min-height:100vh}
+  input,textarea,button{font-family:inherit}
+  ::-webkit-scrollbar{width:4px}
+  ::-webkit-scrollbar-thumb{background:#1e5f74;border-radius:4px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useRef,useEffect}=React;
+const C={primary:"#0a3d62",secondary:"#1e5f74",accent:"#f39c12",green:"#27ae60",red:"#e74c3c",light:"#eaf4fb",white:"#ffffff",gray:"#7f8c8d",border:"#d5e8f3",bg:"#f0f7fc"};
+const grad=`linear-gradient(135deg,${C.primary} 0%,${C.secondary} 100%)`;
+const DB={
+  users:[
+    {id:1,role:"admin",name:"Admin Director",email:"admin@freedom.edu",password:"admin123",avatar:"🏛️"},
+    {id:2,role:"teacher",name:"Mr. Arjun Kumar",email:"arjun@freedom.edu",password:"teacher123",avatar:"👨‍🏫",subject:"Mathematics",grade:"Grade 9-12",students:45},
+    {id:3,role:"teacher",name:"Ms. Priya Devi",email:"priya@freedom.edu",password:"teacher123",avatar:"👩‍🏫",subject:"Science",grade:"Grade 6-12",students:38},
+    {id:4,role:"student",name:"Arun Selvam",email:"arun@freedom.edu",password:"student123",avatar:"👦",grade:"Grade 10",rollNo:"FEH-1001",attendance:92},
+    {id:5,role:"student",name:"Preethi Nair",email:"preethi@freedom.edu",password:"student123",avatar:"👧",grade:"Grade 10",rollNo:"FEH-1002",attendance:88},
+  ],
+  announcements:[
+    {id:1,title:"Term Exam Schedule Released",body:"Term exams start from July 1st. Check timetable.",date:"2026-06-10",by:"Admin"},
+    {id:2,title:"Annual Day Celebration",body:"Annual day on June 20th. All students must attend.",date:"2026-06-08",by:"Admin"},
+  ],
+  assignments:[
+    {id:1,title:"Algebra Chapter 5 Problems",subject:"Mathematics",teacher:"Mr. Arjun Kumar",dueDate:"2026-06-20",grade:"Grade 10",submitted:false},
+    {id:2,title:"Cell Biology Lab Report",subject:"Science",teacher:"Ms. Priya Devi",dueDate:"2026-06-18",grade:"Grade 10",submitted:true},
+    {id:3,title:"Trigonometry Worksheet",subject:"Mathematics",teacher:"Mr. Arjun Kumar",dueDate:"2026-06-25",grade:"Grade 10",submitted:false},
+  ],
+  students:[
+    {id:4,name:"Arun Selvam",rollNo:"FEH-1001",grade:"Grade 10",attendance:92,marks:88,avatar:"👦"},
+    {id:5,name:"Preethi Nair",rollNo:"FEH-1002",grade:"Grade 10",attendance:88,marks:91,avatar:"👧"},
+    {id:6,name:"Karthik Raja",rollNo:"FEH-1003",grade:"Grade 10",attendance:76,marks:74,avatar:"👦"},
+    {id:7,name:"Divya Menon",rollNo:"FEH-1004",grade:"Grade 11",attendance:95,marks:96,avatar:"👧"},
+    {id:8,name:"Suresh Babu",rollNo:"FEH-1005",grade:"Grade 11",attendance:82,marks:79,avatar:"👦"},
+  ],
+  teachers:[
+    {id:2,name:"Mr. Arjun Kumar",subject:"Mathematics",grade:"Grade 9-12",experience:"12 yrs",students:45,avatar:"👨‍🏫",status:"Active"},
+    {id:3,name:"Ms. Priya Devi",subject:"Science",grade:"Grade 6-12",experience:"8 yrs",students:38,avatar:"👩‍🏫",status:"Active"},
+    {id:9,name:"Mr. Rajan Pillai",subject:"History",grade:"Grade 8-12",experience:"15 yrs",students:52,avatar:"👨‍🏫",status:"Active"},
+    {id:10,name:"Ms. Kavitha S",subject:"Tamil",grade:"Grade 6-10",experience:"10 yrs",students:41,avatar:"👩‍🏫",status:"Active"},
+  ],
+};
+const quizData={
+  Mathematics:[
+    {q:"What is 15 × 8?",options:["100","120","115","130"],ans:1},
+    {q:"√144 = ?",options:["11","12","13","14"],ans:1},
+    {q:"Solve: 3x + 6 = 21",options:["x=3","x=4","x=5","x=6"],ans:2},
+  ],
+  Science:[
+    {q:"Chemical formula of water?",options:["H2O","CO2","O2","H2"],ans:0},
+    {q:"Closest planet to the Sun?",options:["Venus","Earth","Mercury","Mars"],ans:2},
+    {q:"DNA stands for?",options:["Deoxyribonucleic Acid","Diribonucleic Acid","Deoxyribonitric Acid","None"],ans:0},
+  ],
+};
+const Card=({children,style={}})=><div style={{background:C.white,borderRadius:16,padding:20,boxShadow:"0 2px 16px rgba(10,61,98,0.09)",...style}}>{children}</div>;
+const Badge=({children,color=C.primary})=><span style={{background:color+"18",color,borderRadius:20,padding:"3px 12px",fontSize:12,fontWeight:700}}>{children}</span>;
+const Stat=({icon,label,value,color=C.primary})=><Card style={{textAlign:"center",borderTop:`4px solid ${color}`}}><div style={{fontSize:32}}>{icon}</div><div style={{fontSize:26,fontWeight:900,color,marginTop:4}}>{value}</div><div style={{fontSize:12,color:C.gray,marginTop:2}}>{label}</div></Card>;
+const Btn=({children,onClick,style={},variant="primary",disabled=false})=>{
+  const variants={primary:{background:grad,color:C.white},outline:{background:"transparent",color:C.primary,border:`2px solid ${C.primary}`},danger:{background:C.red,color:C.white},success:{background:C.green,color:C.white},accent:{background:C.accent,color:C.white}};
+  return <button onClick={onClick} disabled={disabled} style={{border:"none",borderRadius:10,padding:"10px 20px",fontWeight:700,fontSize:14,cursor:disabled?"not-allowed":"pointer",opacity:disabled?0.5:1,...variants[variant],...style}}>{children}</button>;
+};
+
+function AIChat({messages,input,setInput,onSend,loading,role}){
+  const bottomRef=useRef(null);
+  useEffect(()=>{bottomRef.current?.scrollIntoView({behavior:"smooth"})},[messages,loading]);
+  const placeholders={admin:"Ask about reports, planning, management...",teacher:"Ask for lesson plans, quiz ideas...",student:"Ask any question in Tamil, English or Sinhala..."};
+  const welcomes={admin:"👋 Hello Director! I can help with academic planning and management.",teacher:"👋 Hello Teacher! I can help create lesson plans and quizzes.",student:"👋 வணக்கம்! I'm your AI Tutor. Ask me anything in Tamil, English or Sinhala!"};
+  return <div><h2 style={{color:C.primary,marginBottom:16}}>🤖 AI Assistant</h2>
+    <Card style={{display:"flex",flexDirection:"column",height:"calc(100vh - 240px)",padding:0,overflow:"hidden"}}>
+      <div style={{flex:1,overflowY:"auto",padding:16,display:"flex",flexDirection:"column",gap:12}}>
+        <div style={{background:C.light,borderRadius:12,padding:14,fontSize:14,color:"#444"}}>{welcomes[role]}</div>
+        {messages.map((m,i)=><div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start"}}>
+          <div style={{maxWidth:"82%",background:m.role==="user"?grad:C.light,color:m.role==="user"?C.white:"#222",borderRadius:m.role==="user"?"18px 18px 4px 18px":"18px 18px 18px 4px",padding:"12px 16px",fontSize:14,lineHeight:1.6,whiteSpace:"pre-wrap"}}>{m.content}</div>
+        </div>)}
+        {loading&&<div style={{background:C.light,borderRadius:12,padding:"12px 16px",color:C.gray,fontSize:14}}>⏳ Thinking...</div>}
+        <div ref={bottomRef}/>
+      </div>
+      <div style={{padding:12,borderTop:`1px solid ${C.border}`,display:"flex",gap:10}}>
+        <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&onSend()} placeholder={placeholders[role]} style={{flex:1,padding:"12px 16px",borderRadius:24,border:`2px solid ${C.border}`,fontSize:14,outline:"none"}}/>
+        <Btn onClick={onSend} disabled={loading} style={{borderRadius:24,padding:"12px 20px"}}>Send</Btn>
+      </div>
+    </Card></div>;
+}
+
+function Layout({children,user,onLogout,tabs,activeTab,setTab,accentColor}){
+  const roleLabel={admin:"Director",teacher:"Teacher",student:"Student"};
+  return <div style={{minHeight:"100vh",background:C.bg,display:"flex",flexDirection:"column"}}>
+    <header style={{background:grad,color:C.white,padding:"0 16px",display:"flex",alignItems:"center",justifyContent:"space-between",height:58,position:"sticky",top:0,zIndex:100,boxShadow:"0 2px 12px rgba(10,61,98,0.25)"}}>
+      <div><div style={{fontWeight:900,fontSize:17}}>🎓 Freedom EduHub</div><div style={{fontSize:10,opacity:0.75}}>{roleLabel[user.role]} Portal</div></div>
+      <div style={{display:"flex",alignItems:"center",gap:10}}>
+        <div style={{textAlign:"right"}}><div style={{fontSize:13,fontWeight:700}}>{user.avatar} {user.name}</div><div style={{fontSize:10,opacity:0.75,textTransform:"capitalize"}}>{user.role}</div></div>
+        <button onClick={onLogout} style={{background:"rgba(255,255,255,0.15)",border:"none",color:C.white,borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:12,fontWeight:600}}>Logout</button>
+      </div>
+    </header>
+    <main style={{flex:1,padding:"20px 16px",paddingBottom:80,maxWidth:700,margin:"0 auto",width:"100%"}}>{children}</main>
+    <nav style={{position:"fixed",bottom:0,left:0,right:0,background:C.white,borderTop:`1px solid ${C.border}`,display:"flex",zIndex:100,boxShadow:"0 -4px 20px rgba(10,61,98,0.1)"}}>
+      {tabs.map(item=><button key={item.key} onClick={()=>setTab(item.key)} style={{flex:1,padding:"10px 4px 8px",background:"none",border:"none",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:3,color:activeTab===item.key?accentColor:C.gray}}>
+        <span style={{fontSize:20}}>{item.icon}</span>
+        <span style={{fontSize:9,fontWeight:activeTab===item.key?800:400}}>{item.label}</span>
+        {activeTab===item.key&&<div style={{width:20,height:3,background:accentColor,borderRadius:2}}/>}
+      </button>)}
+    </nav>
+  </div>;
+}
+
+function LoginPage({onLogin}){
+  const [role,setRole]=useState("student");
+  const [email,setEmail]=useState("arun@freedom.edu");
+  const [password,setPassword]=useState("student123");
+  const [error,setError]=useState("");
+  const [loading,setLoading]=useState(false);
+  const defaults={admin:{email:"admin@freedom.edu",password:"admin123"},teacher:{email:"arjun@freedom.edu",password:"teacher123"},student:{email:"arun@freedom.edu",password:"student123"}};
+  const roleConfig={admin:{icon:"🏛️",label:"Admin / Director",color:"#8e44ad"},teacher:{icon:"👨‍🏫",label:"Teacher",color:C.secondary},student:{icon:"👩‍🎓",label:"Student",color:C.accent}};
+  const handleLogin=()=>{
+    setLoading(true);setError("");
+    setTimeout(()=>{
+      const user=DB.users.find(u=>u.email===email&&u.password===password&&u.role===role);
+      if(user)onLogin(user); else setError("Invalid credentials. Please try again.");
+      setLoading(false);
+    },800);
+  };
+  return <div style={{minHeight:"100vh",background:C.bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:20}}>
+    <div style={{textAlign:"center",marginBottom:32}}>
+      <div style={{fontSize:56}}>🎓</div>
+      <h1 style={{margin:"8px 0 4px",fontSize:28,fontWeight:900,color:C.primary}}>Freedom EduHub</h1>
+      <p style={{color:C.gray,fontSize:14}}>School to Degree — All in One Platform</p>
+    </div>
+    <Card style={{width:"100%",maxWidth:420}}>
+      <div style={{display:"flex",gap:8,marginBottom:24}}>
+        {Object.entries(roleConfig).map(([r,cfg])=><button key={r} onClick={()=>{setRole(r);setEmail(defaults[r].email);setPassword(defaults[r].password);setError("");}} style={{flex:1,padding:"10px 6px",borderRadius:10,border:`2px solid ${role===r?cfg.color:C.border}`,background:role===r?cfg.color+"12":C.white,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
+          <span style={{fontSize:20}}>{cfg.icon}</span>
+          <span style={{fontSize:11,fontWeight:700,color:role===r?cfg.color:C.gray}}>{r.charAt(0).toUpperCase()+r.slice(1)}</span>
+        </button>)}
+      </div>
+      <div style={{marginBottom:14}}>
+        <label style={{fontSize:13,fontWeight:600,color:C.primary,display:"block",marginBottom:6}}>Email</label>
+        <input value={email} onChange={e=>setEmail(e.target.value)} style={{width:"100%",padding:"12px 14px",borderRadius:10,border:`2px solid ${C.border}`,fontSize:14,outline:"none"}}/>
+      </div>
+      <div style={{marginBottom:20}}>
+        <label style={{fontSize:13,fontWeight:600,color:C.primary,display:"block",marginBottom:6}}>Password</label>
+        <input type="password" value={password} onChange={e=>setPassword(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleLogin()} style={{width:"100%",padding:"12px 14px",borderRadius:10,border:`2px solid ${C.border}`,fontSize:14,outline:"none"}}/>
+      </div>
+      {error&&<div style={{background:"#fdecea",color:C.red,borderRadius:8,padding:"10px 14px",fontSize:13,marginBottom:16}}>⚠️ {error}</div>}
+      <Btn onClick={handleLogin} disabled={loading} style={{width:"100%",padding:"14px",fontSize:16}}>{loading?"Signing in...":`Sign in as ${roleConfig[role].label}`}</Btn>
+      <div style={{marginTop:16,padding:"12px 14px",background:C.light,borderRadius:10,fontSize:12,color:C.gray}}>
+        <strong>Login credentials:</strong><br/>
+        Admin: admin@freedom.edu / admin123<br/>
+        Teacher: arjun@freedom.edu / teacher123<br/>
+        Student: arun@freedom.edu / student123
+      </div>
+    </Card>
+  </div>;
+}
+
+function AdminDashboard({user,onLogout}){
+  const [tab,setTab]=useState("overview");
+  const [announcements,setAnnouncements]=useState(DB.announcements);
+  const [newAnn,setNewAnn]=useState({title:"",body:""});
+  const [showForm,setShowForm]=useState(false);
+  const [aiMessages,setAiMessages]=useState([]);
+  const [aiInput,setAiInput]=useState("");
+  const [aiLoading,setAiLoading]=useState(false);
+  const tabs=[{key:"overview",icon:"📊",label:"Overview"},{key:"students",icon:"👩‍🎓",label:"Students"},{key:"teachers",icon:"👨‍🏫",label:"Teachers"},{key:"announcements",icon:"📢",label:"Notices"},{key:"ai",icon:"🤖",label:"AI Help"}];
+  const addAnn=()=>{if(!newAnn.title||!newAnn.body)return;setAnnouncements([{id:Date.now(),...newAnn,date:new Date().toISOString().split("T")[0],by:"Admin"},...announcements]);setNewAnn({title:"",body:""});setShowForm(false);};
+  const sendAI=async()=>{
+    if(!aiInput.trim())return;
+    const userMsg={role:"user",content:aiInput};const msgs=[...aiMessages,userMsg];
+    setAiMessages(msgs);setAiInput("");setAiLoading(true);
+    try{
+      const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,system:"You are an AI assistant for school/college admin directors. Help with academic planning, announcements, reports, student/teacher management. Be concise and professional.",messages:msgs})});
+      const data=await res.json();
+      setAiMessages([...msgs,{role:"assistant",content:data.content?.[0]?.text||"Error."}]);
+    }catch{setAiMessages([...msgs,{role:"assistant",content:"Connection error."}]);}
+    setAiLoading(false);
+  };
+  return <Layout user={user} onLogout={onLogout} tabs={tabs} activeTab={tab} setTab={setTab} accentColor="#8e44ad">
+    {tab==="overview"&&<div>
+      <h2 style={{color:C.primary,marginBottom:20}}>Welcome, {user.name} 👋</h2>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:14,marginBottom:24}}>
+        <Stat icon="👩‍🎓" label="Total Students" value="248" color={C.accent}/>
+        <Stat icon="👨‍🏫" label="Teachers" value="18" color={C.secondary}/>
+        <Stat icon="📚" label="Active Courses" value="32" color={C.green}/>
+        <Stat icon="📊" label="Avg Attendance" value="89%" color="#8e44ad"/>
+      </div>
+      <Card style={{marginBottom:16}}>
+        <h3 style={{margin:"0 0 14px",color:C.primary,fontSize:16}}>📢 Latest Announcements</h3>
+        {announcements.slice(0,2).map(a=><div key={a.id} style={{borderLeft:`4px solid ${C.accent}`,paddingLeft:12,marginBottom:12}}>
+          <div style={{fontWeight:700,color:C.primary,fontSize:14}}>{a.title}</div>
+          <div style={{fontSize:12,color:C.gray}}>{a.date} • by {a.by}</div>
+        </div>)}
+      </Card>
+      <Card>
+        <h3 style={{margin:"0 0 14px",color:C.primary,fontSize:16}}>👥 Students Overview</h3>
+        {DB.students.slice(0,3).map(s=><div key={s.id} style={{display:"flex",alignItems:"center",gap:12,marginBottom:10}}>
+          <span style={{fontSize:28}}>{s.avatar}</span>
+          <div style={{flex:1}}><div style={{fontWeight:700,fontSize:14,color:C.primary}}>{s.name}</div><div style={{fontSize:12,color:C.gray}}>{s.rollNo} • {s.grade}</div></div>
+          <Badge color={s.attendance>=90?C.green:s.attendance>=75?C.accent:C.red}>{s.attendance}%</Badge>
+        </div>)}
+      </Card>
+    </div>}
+    {tab==="students"&&<div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+        <h2 style={{margin:0,color:C.primary}}>👩‍🎓 Students</h2>
+        <Btn variant="accent">+ Add</Btn>
+      </div>
+      {DB.students.map(s=><Card key={s.id} style={{marginBottom:12}}>
+        <div style={{display:"flex",alignItems:"center",gap:14}}>
+          <span style={{fontSize:36}}>{s.avatar}</span>
+          <div style={{flex:1}}>
+            <div style={{fontWeight:800,color:C.primary,fontSize:15}}>{s.name}</div>
+            <div style={{fontSize:13,color:C.gray}}>{s.rollNo} • {s.grade}</div>
+            <div style={{display:"flex",gap:8,marginTop:6}}>
+              <Badge color={s.attendance>=90?C.green:s.attendance>=75?C.accent:C.red}>📅 {s.attendance}%</Badge>
+              <Badge color={s.marks>=90?C.green:s.marks>=70?C.secondary:C.red}>📝 {s.marks}%</Badge>
+            </div>
+          </div>
+          <Btn style={{padding:"6px 14px",fontSize:12}}>View</Btn>
+        </div>
+      </Card>)}
+    </div>}
+    {tab==="teachers"&&<div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+        <h2 style={{margin:0,color:C.primary}}>👨‍🏫 Teachers</h2>
+        <Btn variant="accent">+ Add</Btn>
+      </div>
+      {DB.teachers.map(t=><Card key={t.id} style={{marginBottom:12}}>
+        <div style={{display:"flex",alignItems:"center",gap:14}}>
+          <span style={{fontSize:36}}>{t.avatar}</span>
+          <div style={{flex:1}}>
+            <div style={{fontWeight:800,color:C.primary,fontSize:15}}>{t.name}</div>
+            <div style={{fontSize:13,color:C.gray}}>{t.subject} • {t.grade}</div>
+            <div style={{display:"flex",gap:8,marginTop:6}}>
+              <Badge color={C.secondary}>📅 {t.experience}</Badge>
+              <Badge color={C.green}>👥 {t.students}</Badge>
+              <Badge color={C.green}>{t.status}</Badge>
+            </div>
+          </div>
+          <Btn style={{padding:"6px 14px",fontSize:12}}>Manage</Btn>
+        </div>
+      </Card>)}
+    </div>}
+    {tab==="announcements"&&<div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+        <h2 style={{margin:0,color:C.primary}}>📢 Announcements</h2>
+        <Btn variant="accent" onClick={()=>setShowForm(!showForm)}>+ New</Btn>
+      </div>
+      {showForm&&<Card style={{marginBottom:16,border:`2px solid ${C.accent}`}}>
+        <h3 style={{margin:"0 0 14px",color:C.primary}}>New Announcement</h3>
+        <input placeholder="Title" value={newAnn.title} onChange={e=>setNewAnn({...newAnn,title:e.target.value})} style={{width:"100%",padding:"10px 14px",borderRadius:8,border:`2px solid ${C.border}`,fontSize:14,marginBottom:10}}/>
+        <textarea placeholder="Message..." value={newAnn.body} onChange={e=>setNewAnn({...newAnn,body:e.target.value})} rows={3} style={{width:"100%",padding:"10px 14px",borderRadius:8,border:`2px solid ${C.border}`,fontSize:14,resize:"none",marginBottom:12}}/>
+        <div style={{display:"flex",gap:10}}><Btn onClick={addAnn}>Publish</Btn><Btn variant="outline" onClick={()=>setShowForm(false)}>Cancel</Btn></div>
+      </Card>}
+      {announcements.map(a=><Card key={a.id} style={{marginBottom:12,borderLeft:`4px solid ${C.accent}`}}>
+        <div style={{fontWeight:800,color:C.primary,fontSize:15,marginBottom:4}}>{a.title}</div>
+        <div style={{fontSize:14,color:"#444",marginBottom:8}}>{a.body}</div>
+        <div style={{fontSize:12,color:C.gray}}>{a.date} • by {a.by}</div>
+      </Card>)}
+    </div>}
+    {tab==="ai"&&<AIChat messages={aiMessages} input={aiInput} setInput={setAiInput} onSend={sendAI} loading={aiLoading} role="admin"/>}
+  </Layout>;
+}
+
+function TeacherDashboard({user,onLogout}){
+  const [tab,setTab]=useState("overview");
+  const [assignments,setAssignments]=useState(DB.assignments.filter(a=>a.teacher===user.name));
+  const [showForm,setShowForm]=useState(false);
+  const [newAssign,setNewAssign]=useState({title:"",dueDate:""});
+  const [aiMessages,setAiMessages]=useState([]);
+  const [aiInput,setAiInput]=useState("");
+  const [aiLoading,setAiLoading]=useState(false);
+  const tabs=[{key:"overview",icon:"📊",label:"Overview"},{key:"students",icon:"👩‍🎓",label:"Students"},{key:"assignments",icon:"📝",label:"Assignments"},{key:"ai",icon:"🤖",label:"AI Help"}];
+  const myStudents=DB.students.filter(s=>["Grade 10","Grade 9"].includes(s.grade));
+  const addAssign=()=>{if(!newAssign.title||!newAssign.dueDate)return;setAssignments([{id:Date.now(),...newAssign,subject:user.subject,teacher:user.name,grade:"Grade 10",submitted:false},...assignments]);setNewAssign({title:"",dueDate:""});setShowForm(false);};
+  const sendAI=async()=>{
+    if(!aiInput.trim())return;
+    const userMsg={role:"user",content:aiInput};const msgs=[...aiMessages,userMsg];
+    setAiMessages(msgs);setAiInput("");setAiLoading(true);
+    try{
+      const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,system:`You are an AI teaching assistant for a ${user.subject} teacher. Help with lesson plans, quiz questions, assignment ideas, and teaching strategies.`,messages:msgs})});
+      const data=await res.json();
+      setAiMessages([...msgs,{role:"assistant",content:data.content?.[0]?.text||"Error."}]);
+    }catch{setAiMessages([...msgs,{role:"assistant",content:"Connection error."}]);}
+    setAiLoading(false);
+  };
+  return <Layout user={user} onLogout={onLogout} tabs={tabs} activeTab={tab} setTab={setTab} accentColor={C.secondary}>
+    {tab==="overview"&&<div>
+      <h2 style={{color:C.primary,marginBottom:20}}>Welcome, {user.name} 👋</h2>
+      <Card style={{background:grad,color:C.white,marginBottom:20}}>
+        <div style={{fontSize:14,opacity:0.8}}>Your Subject</div>
+        <div style={{fontSize:22,fontWeight:900}}>{user.subject}</div>
+        <div style={{fontSize:13,opacity:0.8,marginTop:4}}>{user.grade}</div>
+      </Card>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:14,marginBottom:20}}>
+        <Stat icon="👩‍🎓" label="My Students" value={myStudents.length} color={C.accent}/>
+        <Stat icon="📝" label="Assignments" value={assignments.length} color={C.secondary}/>
+        <Stat icon="✅" label="Submitted" value={assignments.filter(a=>a.submitted).length} color={C.green}/>
+        <Stat icon="⏳" label="Pending" value={assignments.filter(a=>!a.submitted).length} color={C.red}/>
+      </div>
+      <Card>
+        <h3 style={{margin:"0 0 14px",color:C.primary,fontSize:16}}>📢 Announcements</h3>
+        {DB.announcements.map(a=><div key={a.id} style={{borderLeft:`4px solid ${C.secondary}`,paddingLeft:12,marginBottom:12}}>
+          <div style={{fontWeight:700,color:C.primary,fontSize:14}}>{a.title}</div>
+          <div style={{fontSize:12,color:C.gray}}>{a.date}</div>
+        </div>)}
+      </Card>
+    </div>}
+    {tab==="students"&&<div>
+      <h2 style={{color:C.primary,marginBottom:16}}>👩‍🎓 My Students</h2>
+      {myStudents.map(s=><Card key={s.id} style={{marginBottom:12}}>
+        <div style={{display:"flex",alignItems:"center",gap:14}}>
+          <span style={{fontSize:36}}>{s.avatar}</span>
+          <div style={{flex:1}}>
+            <div style={{fontWeight:800,color:C.primary}}>{s.name}</div>
+            <div style={{fontSize:12,color:C.gray}}>{s.rollNo} • {s.grade}</div>
+            <div style={{display:"flex",gap:8,marginTop:6}}>
+              <Badge color={s.attendance>=90?C.green:s.attendance>=75?C.accent:C.red}>📅 {s.attendance}%</Badge>
+              <Badge color={s.marks>=90?C.green:s.marks>=70?C.secondary:C.red}>📝 {s.marks}%</Badge>
+            </div>
+          </div>
+        </div>
+      </Card>)}
+    </div>}
+    {tab==="assignments"&&<div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+        <h2 style={{margin:0,color:C.primary}}>📝 Assignments</h2>
+        <Btn variant="accent" onClick={()=>setShowForm(!showForm)}>+ Create</Btn>
+      </div>
+      {showForm&&<Card style={{marginBottom:16,border:`2px solid ${C.accent}`}}>
+        <h3 style={{margin:"0 0 14px",color:C.primary}}>New Assignment</h3>
+        <input placeholder="Assignment title" value={newAssign.title} onChange={e=>setNewAssign({...newAssign,title:e.target.value})} style={{width:"100%",padding:"10px 14px",borderRadius:8,border:`2px solid ${C.border}`,fontSize:14,marginBottom:10}}/>
+        <input type="date" value={newAssign.dueDate} onChange={e=>setNewAssign({...newAssign,dueDate:e.target.value})} style={{width:"100%",padding:"10px 14px",borderRadius:8,border:`2px solid ${C.border}`,fontSize:14,marginBottom:12}}/>
+        <div style={{display:"flex",gap:10}}><Btn onClick={addAssign}>Assign</Btn><Btn variant="outline" onClick={()=>setShowForm(false)}>Cancel</Btn></div>
+      </Card>}
+      {assignments.map(a=><Card key={a.id} style={{marginBottom:12,borderLeft:`4px solid ${a.submitted?C.green:C.accent}`}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+          <div><div style={{fontWeight:800,color:C.primary,fontSize:15}}>{a.title}</div><div style={{fontSize:12,color:C.gray,marginTop:4}}>{a.subject} • Due: {a.dueDate}</div></div>
+          <Badge color={a.submitted?C.green:C.accent}>{a.submitted?"✅ Done":"⏳ Pending"}</Badge>
+        </div>
+      </Card>)}
+    </div>}
+    {tab==="ai"&&<AIChat messages={aiMessages} input={aiInput} setInput={setAiInput} onSend={sendAI} loading={aiLoading} role="teacher"/>}
+  </Layout>;
+}
+
+function StudentDashboard({user,onLogout}){
+  const [tab,setTab]=useState("overview");
+  const [aiMessages,setAiMessages]=useState([]);
+  const [aiInput,setAiInput]=useState("");
+  const [aiLoading,setAiLoading]=useState(false);
+  const [quizSubject,setQuizSubject]=useState(null);
+  const [quizIdx,setQuizIdx]=useState(0);
+  const [selected,setSelected]=useState(null);
+  const [answered,setAnswered]=useState(false);
+  const [score,setScore]=useState(0);
+  const [quizDone,setQuizDone]=useState(false);
+  const tabs=[{key:"overview",icon:"🏠",label:"Home"},{key:"assignments",icon:"📝",label:"Assignments"},{key:"quiz",icon:"✏️",label:"Quiz"},{key:"ai",icon:"🤖",label:"AI Tutor"}];
+  const sendAI=async()=>{
+    if(!aiInput.trim())return;
+    const userMsg={role:"user",content:aiInput};const msgs=[...aiMessages,userMsg];
+    setAiMessages(msgs);setAiInput("");setAiLoading(true);
+    try{
+      const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,system:"You are a friendly AI tutor for school/college students. Answer simply. Respond in Tamil, English, or Sinhala based on what the student uses. Encourage and help them understand concepts clearly.",messages:msgs})});
+      const data=await res.json();
+      setAiMessages([...msgs,{role:"assistant",content:data.content?.[0]?.text||"Error."}]);
+    }catch{setAiMessages([...msgs,{role:"assistant",content:"Connection error."}]);}
+    setAiLoading(false);
+  };
+  const startQuiz=(sub)=>{setQuizSubject(sub);setQuizIdx(0);setScore(0);setSelected(null);setAnswered(false);setQuizDone(false);};
+  const handleAnswer=(i)=>{if(answered)return;setSelected(i);setAnswered(true);if(i===quizData[quizSubject][quizIdx].ans)setScore(s=>s+1);};
+  const nextQ=()=>{if(quizIdx+1>=quizData[quizSubject].length)setQuizDone(true);else{setQuizIdx(i=>i+1);setSelected(null);setAnswered(false);}};
+  return <Layout user={user} onLogout={onLogout} tabs={tabs} activeTab={tab} setTab={setTab} accentColor={C.accent}>
+    {tab==="overview"&&<div>
+      <h2 style={{color:C.primary,marginBottom:4}}>Hello, {user.name}! 👋</h2>
+      <p style={{color:C.gray,marginBottom:20,fontSize:14}}>{user.rollNo} • {user.grade}</p>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:14,marginBottom:20}}>
+        <Stat icon="📅" label="Attendance" value={`${user.attendance}%`} color={user.attendance>=90?C.green:C.accent}/>
+        <Stat icon="📝" label="Assignments" value={DB.assignments.length} color={C.secondary}/>
+        <Stat icon="✅" label="Submitted" value={DB.assignments.filter(a=>a.submitted).length} color={C.green}/>
+        <Stat icon="⏳" label="Pending" value={DB.assignments.filter(a=>!a.submitted).length} color={C.red}/>
+      </div>
+      <Card style={{marginBottom:16}}>
+        <h3 style={{margin:"0 0 14px",color:C.primary,fontSize:16}}>📢 Notices</h3>
+        {DB.announcements.map(a=><div key={a.id} style={{borderLeft:`4px solid ${C.accent}`,paddingLeft:12,marginBottom:12}}>
+          <div style={{fontWeight:700,color:C.primary,fontSize:14}}>{a.title}</div>
+          <div style={{fontSize:13,color:"#555",marginTop:2}}>{a.body}</div>
+          <div style={{fontSize:11,color:C.gray,marginTop:4}}>{a.date}</div>
+        </div>)}
+      </Card>
+      <Card>
+        <h3 style={{margin:"0 0 14px",color:C.primary,fontSize:16}}>⏰ Upcoming Deadlines</h3>
+        {DB.assignments.filter(a=>!a.submitted).map(a=><div key={a.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+          <div><div style={{fontWeight:600,fontSize:14,color:C.primary}}>{a.title}</div><div style={{fontSize:12,color:C.gray}}>{a.subject}</div></div>
+          <Badge color={C.red}>Due {a.dueDate}</Badge>
+        </div>)}
+      </Card>
+    </div>}
+    {tab==="assignments"&&<div>
+      <h2 style={{color:C.primary,marginBottom:16}}>📝 My Assignments</h2>
+      {DB.assignments.map(a=><Card key={a.id} style={{marginBottom:12,borderLeft:`4px solid ${a.submitted?C.green:C.accent}`}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10}}>
+          <div style={{flex:1}}>
+            <div style={{fontWeight:800,color:C.primary,fontSize:15}}>{a.title}</div>
+            <div style={{fontSize:12,color:C.gray,marginTop:4}}>{a.subject} • {a.teacher}</div>
+            <div style={{fontSize:12,color:C.gray}}>Due: {a.dueDate}</div>
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:6,alignItems:"flex-end"}}>
+            <Badge color={a.submitted?C.green:C.accent}>{a.submitted?"✅ Done":"⏳ Pending"}</Badge>
+            {!a.submitted&&<Btn style={{padding:"6px 14px",fontSize:12}}>Submit</Btn>}
+          </div>
+        </div>
+      </Card>)}
+    </div>}
+    {tab==="quiz"&&<div>
+      <h2 style={{color:C.primary,marginBottom:16}}>✏️ Practice Quiz</h2>
+      {!quizSubject?<div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:14}}>
+        {Object.keys(quizData).map(sub=><button key={sub} onClick={()=>startQuiz(sub)} style={{background:C.white,border:`2px solid ${C.border}`,borderRadius:14,padding:"28px 16px",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:10,boxShadow:"0 2px 12px rgba(0,0,0,0.06)"}}>
+          <span style={{fontSize:36}}>{sub==="Mathematics"?"📐":"🔬"}</span>
+          <span style={{fontWeight:700,color:C.primary}}>{sub}</span>
+          <span style={{fontSize:12,color:C.gray}}>{quizData[sub].length} Questions</span>
+        </button>)}
+      </div>:quizDone?<Card style={{textAlign:"center"}}>
+        <div style={{fontSize:56,marginBottom:12}}>{score===quizData[quizSubject].length?"🏆":"📚"}</div>
+        <h3 style={{color:C.primary}}>Your Score</h3>
+        <div style={{fontSize:48,fontWeight:900,color:score>=2?C.green:C.red}}>{score}/{quizData[quizSubject].length}</div>
+        <p style={{color:C.gray,marginBottom:20}}>{score===quizData[quizSubject].length?"Perfect! 🌟":"Keep practicing! 💪"}</p>
+        <div style={{display:"flex",gap:10,justifyContent:"center"}}>
+          <Btn onClick={()=>startQuiz(quizSubject)}>Try Again</Btn>
+          <Btn variant="outline" onClick={()=>setQuizSubject(null)}>Back</Btn>
+        </div>
+      </Card>:<Card>
+        <div style={{display:"flex",justifyContent:"space-between",marginBottom:16}}>
+          <span style={{fontWeight:700,color:C.primary}}>{quizSubject}</span>
+          <span style={{color:C.gray}}>{quizIdx+1}/{quizData[quizSubject].length}</span>
+        </div>
+        <div style={{background:C.light,borderRadius:8,height:8,marginBottom:20}}>
+          <div style={{height:"100%",background:grad,borderRadius:8,width:`${((quizIdx+1)/quizData[quizSubject].length)*100}%`,transition:"width 0.3s"}}/>
+        </div>
+        <h3 style={{color:"#222",marginBottom:18,fontSize:16,lineHeight:1.5}}>{quizData[quizSubject][quizIdx].q}</h3>
+        <div style={{display:"flex",flexDirection:"column",gap:10}}>
+          {quizData[quizSubject][quizIdx].options.map((opt,i)=>{
+            let bg=C.white,border=`2px solid ${C.border}`,color="#333";
+            if(answered){if(i===quizData[quizSubject][quizIdx].ans){bg="#d4edda";border=`2px solid ${C.green}`;color="#155724";}else if(i===selected){bg="#f8d7da";border=`2px solid ${C.red}`;color="#721c24";}}
+            return <button key={i} onClick={()=>handleAnswer(i)} style={{background:bg,border,borderRadius:10,padding:"12px 16px",textAlign:"left",cursor:answered?"default":"pointer",color,fontWeight:500,fontSize:14}}><strong>{["A","B","C","D"][i]}.</strong> {opt}</button>;
+          })}
+        </div>
+        {answered&&<div style={{marginTop:16,textAlign:"center"}}>
+          <div style={{fontWeight:700,color:selected===quizData[quizSubject][quizIdx].ans?C.green:C.red,marginBottom:12,fontSize:16}}>{selected===quizData[quizSubject][quizIdx].ans?"✅ Correct!":"❌ Wrong!"}</div>
+          <Btn onClick={nextQ}>{quizIdx+1>=quizData[quizSubject].length?"See Results":"Next →"}</Btn>
+        </div>}
+      </Card>}
+    </div>}
+    {tab==="ai"&&<AIChat messages={aiMessages} input={aiInput} setInput={setAiInput} onSend={sendAI} loading={aiLoading} role="student"/>}
+  </Layout>;
+}
+
+function App(){
+  const [currentUser,setCurrentUser]=useState(null);
+  if(!currentUser)return <LoginPage onLogin={setCurrentUser}/>;
+  if(currentUser.role==="admin")return <AdminDashboard user={currentUser} onLogout={()=>setCurrentUser(null)}/>;
+  if(currentUser.role==="teacher")return <TeacherDashboard user={currentUser} onLogout={()=>setCurrentUser(null)}/>;
+  if(currentUser.role==="student")return <StudentDashboard user={currentUser} onLogout={()=>setCurrentUser(null)}/>;
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
